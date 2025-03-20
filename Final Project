@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: #e3e3e3;
+            margin-top: 5px;
+            border-radius: 4px;
+        }
+        button {
+            background: red;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="text"] {
+            padding: 8px;
+            width: 75%;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button.add-btn {
+            padding: 8px 12px;
+            margin-left: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>To-Do List</h2>
+        <input type="text" id="task" placeholder="New Task">
+        <button class="add-btn" onclick="addTask()">Add</button>
+        <ul id="taskList"></ul>
+    </div>
+
+    <script>
+        function addTask() {
+            let taskInput = document.getElementById("task");
+            let taskText = taskInput.value.trim();
+            
+            // Check if the task is empty or a duplicate
+            if (taskText === "") return;
+            
+            const existingTasks = document.querySelectorAll('#taskList li');
+            for (let task of existingTasks) {
+                if (task.textContent.includes(taskText)) {
+                    alert('This task already exists!');
+                    taskInput.value = "";
+                    return;
+                }
+            }
+            
+            let li = document.createElement("li");
+            li.innerHTML = `${taskText} <button onclick="removeTask(this)">X</button>`;
+            
+            document.getElementById("taskList").appendChild(li);
+            taskInput.value = "";
+            taskInput.focus(); // Focus the input field again
+            
+            // Optional: Save tasks to localStorage
+            saveTasksToLocalStorage();
+        }
+
+        function removeTask(button) {
+            button.parentElement.remove();
+            saveTasksToLocalStorage(); // Save after task removal
+        }
+
+        function saveTasksToLocalStorage() {
+            const tasks = [];
+            const taskList = document.getElementById("taskList").children;
+            for (let task of taskList) {
+                tasks.push(task.innerText.replace('X', '').trim());
+            }
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+
+        // Load tasks from localStorage when the page loads
+        window.onload = function() {
+            const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+            for (let taskText of savedTasks) {
+                let li = document.createElement("li");
+                li.innerHTML = `${taskText} <button onclick="removeTask(this)">X</button>`;
+                document.getElementById("taskList").appendChild(li);
+            }
+        }
+    </script>
+</body>
+</html>
