@@ -6,60 +6,95 @@
     <title>To-Do List</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
+            background-color: #fafafa;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f4f4f4;
+            margin: 0;
         }
         .container {
             background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 350px;
         }
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-        li {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px;
-            background: #e3e3e3;
-            margin-top: 5px;
-            border-radius: 4px;
-        }
-        button {
-            background: red;
-            color: white;
-            border: none;
-            cursor: pointer;
+        h2 {
+            text-align: center;
+            color: #333;
         }
         input[type="text"] {
-            padding: 8px;
-            width: 75%;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
         }
         button.add-btn {
-            padding: 8px 12px;
-            margin-left: 10px;
+            width: 100%;
+            padding: 12px;
             background-color: #4CAF50;
             color: white;
             border: none;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button.add-btn:hover {
+            background-color: #45a049;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 0;
+        }
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f4f4f4;
+            padding: 12px;
+            margin: 6px 0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        li.completed {
+            background-color: #d3ffd3;
+            text-decoration: line-through;
+        }
+        li button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 5px;
+        }
+        li button:hover {
+            background-color: #e53935;
+        }
+        li button.edit-btn {
+            background-color: #ff9800;
+        }
+        li button.edit-btn:hover {
+            background-color: #fb8c00;
+        }
+        .task-actions {
+            display: flex;
+            gap: 8px;
         }
     </style>
 </head>
 <body>
+
     <div class="container">
         <h2>To-Do List</h2>
-        <input type="text" id="task" placeholder="New Task">
-        <button class="add-btn" onclick="addTask()">Add</button>
+        <input type="text" id="task" placeholder="Enter a new task">
+        <button class="add-btn" onclick="addTask()">Add Task</button>
         <ul id="taskList"></ul>
     </div>
 
@@ -67,53 +102,90 @@
         function addTask() {
             let taskInput = document.getElementById("task");
             let taskText = taskInput.value.trim();
-            
-            // Check if the task is empty or a duplicate
+
             if (taskText === "") return;
-            
+
+            // Check for duplicate tasks
             const existingTasks = document.querySelectorAll('#taskList li');
             for (let task of existingTasks) {
-                if (task.textContent.includes(taskText)) {
+                if (task.innerText.replace('X', '').trim() === taskText) {
                     alert('This task already exists!');
                     taskInput.value = "";
                     return;
                 }
             }
-            
+
             let li = document.createElement("li");
-            li.innerHTML = `${taskText} <button onclick="removeTask(this)">X</button>`;
-            
+            li.innerHTML = `
+                ${taskText}
+                <div class="task-actions">
+                    <button class="edit-btn" onclick="editTask(this)">Edit</button>
+                    <button onclick="toggleCompletion(this)">Complete</button>
+                    <button onclick="removeTask(this)">X</button>
+                </div>
+            `;
+
             document.getElementById("taskList").appendChild(li);
             taskInput.value = "";
-            taskInput.focus(); // Focus the input field again
-            
-            // Optional: Save tasks to localStorage
+            taskInput.focus();
+
+            // Save tasks to localStorage
             saveTasksToLocalStorage();
         }
 
         function removeTask(button) {
-            button.parentElement.remove();
-            saveTasksToLocalStorage(); // Save after task removal
+            button.closest('li').remove();
+            saveTasksToLocalStorage();
+        }
+
+        function toggleCompletion(button) {
+            const task = button.closest('li');
+            task.classList.toggle('completed');
+            saveTasksToLocalStorage();
+        }
+
+        function editTask(button) {
+            const task = button.closest('li');
+            const taskText = task.firstChild.textContent.trim();
+            const newTaskText = prompt("Edit Task", taskText);
+
+            if (newTaskText && newTaskText !== taskText) {
+                task.firstChild.textContent = newTaskText;
+                saveTasksToLocalStorage();
+            }
         }
 
         function saveTasksToLocalStorage() {
             const tasks = [];
             const taskList = document.getElementById("taskList").children;
             for (let task of taskList) {
-                tasks.push(task.innerText.replace('X', '').trim());
+                const taskData = {
+                    text: task.firstChild.textContent.trim(),
+                    completed: task.classList.contains('completed')
+                };
+                tasks.push(taskData);
             }
             localStorage.setItem("tasks", JSON.stringify(tasks));
         }
 
-        // Load tasks from localStorage when the page loads
         window.onload = function() {
             const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
-            for (let taskText of savedTasks) {
+            for (let taskData of savedTasks) {
                 let li = document.createElement("li");
-                li.innerHTML = `${taskText} <button onclick="removeTask(this)">X</button>`;
+                if (taskData.completed) {
+                    li.classList.add("completed");
+                }
+                li.innerHTML = `
+                    ${taskData.text}
+                    <div class="task-actions">
+                        <button class="edit-btn" onclick="editTask(this)">Edit</button>
+                        <button onclick="toggleCompletion(this)">Complete</button>
+                        <button onclick="removeTask(this)">X</button>
+                    </div>
+                `;
                 document.getElementById("taskList").appendChild(li);
             }
-        }
+        };
     </script>
 </body>
 </html>
