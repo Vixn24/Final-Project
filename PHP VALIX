@@ -1,0 +1,173 @@
+<?php
+session_start();
+
+if (!isset($_SESSION['tasks'])) {
+    $_SESSION['tasks'] = [];
+}
+
+if (isset($_POST['add_task'])) {
+    $taskText = trim($_POST['task']);
+    if ($taskText !== "") {
+
+        foreach ($_SESSION['tasks'] as $task) {
+            if ($task['text'] === $taskText) {
+                echo "<script>alert('This task already exists!');</script>";
+                break;
+            }
+        }
+
+        $_SESSION['tasks'][] = ['text' => $taskText, 'completed' => false];
+    }
+}
+
+if (isset($_POST['edit_task'])) {
+    $taskIndex = $_POST['task_index'];
+    $newTaskText = $_POST['new_task_text'];
+    if ($newTaskText !== "") {
+        $_SESSION['tasks'][$taskIndex]['text'] = $newTaskText;
+    }
+}
+
+if (isset($_POST['toggle_task'])) {
+    $taskIndex = $_POST['task_index'];
+    $_SESSION['tasks'][$taskIndex]['completed'] = !$_SESSION['tasks'][$taskIndex]['completed'];
+}
+
+if (isset($_POST['remove_task'])) {
+    $taskIndex = $_POST['task_index'];
+    unset($_SESSION['tasks'][$taskIndex]);
+    $_SESSION['tasks'] = array_values($_SESSION['tasks']);
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <style>
+        /* Add the same styles as before */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #fafafa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 350px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button.add-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button.add-btn:hover {
+            background-color: #45a049;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 0;
+        }
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f4f4f4;
+            padding: 12px;
+            margin: 6px 0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        li.completed {
+            background-color: #d3ffd3;
+            text-decoration: line-through;
+        }
+        li button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 5px;
+        }
+        li button:hover {
+            background-color: #e53935;
+        }
+        li button.edit-btn {
+            background-color: #ff9800;
+        }
+        li button.edit-btn:hover {
+            background-color: #fb8c00;
+        }
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>To-Do List</h2>
+
+        <!-- Add Task Form -->
+        <form method="POST" action="">
+            <input type="text" name="task" id="task" placeholder="Enter a new task" required>
+            <button class="add-btn" name="add_task">Add Task</button>
+        </form>
+
+        <ul id="taskList">
+            <?php
+            foreach ($_SESSION['tasks'] as $index => $task) {
+                echo "<li class='" . ($task['completed'] ? 'completed' : '') . "'>";
+                echo $task['text'];
+                echo "<div class='task-actions'>
+                        <form method='POST' action='' style='display:inline'>
+                            <button class='edit-btn' type='submit' name='edit_task'>Edit</button>
+                            <input type='hidden' name='task_index' value='$index'>
+                            <input type='text' name='new_task_text' placeholder='Edit task' required>
+                        </form>
+                        <form method='POST' action='' style='display:inline'>
+                            <button type='submit' name='toggle_task'>Complete</button>
+                            <input type='hidden' name='task_index' value='$index'>
+                        </form>
+                        <form method='POST' action='' style='display:inline'>
+                            <button type='submit' name='remove_task'>X</button>
+                            <input type='hidden' name='task_index' value='$index'>
+                        </form>
+                      </div>";
+                echo "</li>";
+            }
+            ?>
+        </ul>
+    </div>
+
+</body>
+</html>
